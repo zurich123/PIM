@@ -10,6 +10,8 @@ import {
   type InsertProductOffering,
   type ProductWithOfferings
 } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -37,80 +39,53 @@ export interface IStorage {
   deleteProductOffering(id: number): Promise<boolean>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private products: Map<number, Product>;
-  private productOfferings: Map<number, ProductOffering>;
-  private currentUserId: number;
-  private currentProductId: number;
-  private currentOfferingId: number;
-
-  constructor() {
-    this.users = new Map();
-    this.products = new Map();
-    this.productOfferings = new Map();
-    this.currentUserId = 1;
-    this.currentProductId = 1;
-    this.currentOfferingId = 1;
-  }
-
-  // User methods
+export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
     return user;
   }
 
-  // Product methods
   async getProducts(filters?: {
     productType?: string;
     lifecycleStatus?: string;
     format?: string;
     search?: string;
   }): Promise<ProductWithOfferings[]> {
-    let products = Array.from(this.products.values());
-
-    if (filters) {
-      if (filters.productType) {
-        products = products.filter(p => p.productType === filters.productType);
-      }
-      if (filters.lifecycleStatus) {
-        products = products.filter(p => p.lifecycleStatus === filters.lifecycleStatus);
-      }
-      if (filters.format) {
-        products = products.filter(p => p.format === filters.format);
-      }
-      if (filters.search) {
-        const search = filters.search.toLowerCase();
-        products = products.filter(p => 
-          p.productName.toLowerCase().includes(search) ||
-          p.productId.toLowerCase().includes(search)
-        );
-      }
-    }
-
+    const productList = await db.select().from(products);
+    
     const productsWithOfferings: ProductWithOfferings[] = [];
-    for (const product of products) {
+    for (const product of productList) {
       const offerings = await this.getProductOfferings(product.id);
       productsWithOfferings.push({ ...product, offerings });
+    }
+
+    // Apply search filter in memory for now
+    if (filters?.search) {
+      const search = filters.search.toLowerCase();
+      return productsWithOfferings.filter(p => 
+        p.productName.toLowerCase().includes(search) ||
+        p.productId.toLowerCase().includes(search)
+      );
     }
 
     return productsWithOfferings;
   }
 
   async getProduct(id: number): Promise<ProductWithOfferings | undefined> {
-    const product = this.products.get(id);
+    const [product] = await db.select().from(products).where(eq(products.id, id));
     if (!product) return undefined;
     
     const offerings = await this.getProductOfferings(id);
@@ -118,7 +93,7 @@ export class MemStorage implements IStorage {
   }
 
   async getProductBySku(sku: string): Promise<ProductWithOfferings | undefined> {
-    const product = Array.from(this.products.values()).find(p => p.productId === sku);
+    const [product] = await db.select().from(products).where(eq(products.productId, sku));
     if (!product) return undefined;
     
     const offerings = await this.getProductOfferings(product.id);
@@ -126,53 +101,55 @@ export class MemStorage implements IStorage {
   }
 
   async createProduct(insertProduct: InsertProduct): Promise<Product> {
-    const id = this.currentProductId++;
-    const product: Product = { ...insertProduct, id };
-    this.products.set(id, product);
+    const [product] = await db
+      .insert(products)
+      .values(insertProduct)
+      .returning();
     return product;
   }
 
   async updateProduct(id: number, updateData: Partial<InsertProduct>): Promise<Product | undefined> {
-    const product = this.products.get(id);
-    if (!product) return undefined;
-    
-    const updatedProduct = { ...product, ...updateData };
-    this.products.set(id, updatedProduct);
-    return updatedProduct;
+    const [product] = await db
+      .update(products)
+      .set(updateData)
+      .where(eq(products.id, id))
+      .returning();
+    return product || undefined;
   }
 
   async deleteProduct(id: number): Promise<boolean> {
     // Delete associated offerings first
-    const offerings = Array.from(this.productOfferings.values()).filter(o => o.productId === id);
-    offerings.forEach(o => this.productOfferings.delete(o.id));
+    await db.delete(productOfferings).where(eq(productOfferings.productId, id));
     
-    return this.products.delete(id);
+    const result = await db.delete(products).where(eq(products.id, id));
+    return result.rowCount > 0;
   }
 
-  // Product offering methods
   async getProductOfferings(productId: number): Promise<ProductOffering[]> {
-    return Array.from(this.productOfferings.values()).filter(o => o.productId === productId);
+    return await db.select().from(productOfferings).where(eq(productOfferings.productId, productId));
   }
 
   async createProductOffering(insertOffering: InsertProductOffering): Promise<ProductOffering> {
-    const id = this.currentOfferingId++;
-    const offering: ProductOffering = { ...insertOffering, id };
-    this.productOfferings.set(id, offering);
+    const [offering] = await db
+      .insert(productOfferings)
+      .values(insertOffering)
+      .returning();
     return offering;
   }
 
   async updateProductOffering(id: number, updateData: Partial<InsertProductOffering>): Promise<ProductOffering | undefined> {
-    const offering = this.productOfferings.get(id);
-    if (!offering) return undefined;
-    
-    const updatedOffering = { ...offering, ...updateData };
-    this.productOfferings.set(id, updatedOffering);
-    return updatedOffering;
+    const [offering] = await db
+      .update(productOfferings)
+      .set(updateData)
+      .where(eq(productOfferings.id, id))
+      .returning();
+    return offering || undefined;
   }
 
   async deleteProductOffering(id: number): Promise<boolean> {
-    return this.productOfferings.delete(id);
+    const result = await db.delete(productOfferings).where(eq(productOfferings.id, id));
+    return result.rowCount > 0;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

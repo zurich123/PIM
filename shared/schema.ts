@@ -53,6 +53,20 @@ export type ProductWithOfferings = Product & {
   offerings: ProductOffering[];
 };
 
+export const categories = pgTable("categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  color: text("color").default("blue"),
+});
+
+export const insertCategorySchema = createInsertSchema(categories).omit({
+  id: true,
+});
+
+export type InsertCategory = z.infer<typeof insertCategorySchema>;
+export type Category = typeof categories.$inferSelect;
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
