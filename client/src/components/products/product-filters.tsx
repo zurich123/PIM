@@ -13,9 +13,11 @@ interface ProductFiltersProps {
 
 export function ProductFilters({ filters, onFiltersChange, onClearFilters }: ProductFiltersProps) {
   const handleFilterChange = (key: string, value: string) => {
+    // Convert "all" to empty string for backend filtering
+    const filterValue = value === "all" ? "" : value;
     onFiltersChange({
       ...filters,
-      [key]: value,
+      [key]: filterValue,
     });
   };
 
@@ -25,14 +27,14 @@ export function ProductFilters({ filters, onFiltersChange, onClearFilters }: Pro
         <div className="flex items-center space-x-2">
           <label className="text-sm font-medium text-gray-700">Product Type:</label>
           <Select
-            value={filters.productType}
+            value={filters.productType || "all"}
             onValueChange={(value) => handleFilterChange("productType", value)}
           >
             <SelectTrigger className="w-40">
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Types</SelectItem>
+              <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="course">Course</SelectItem>
               <SelectItem value="book">Book</SelectItem>
               <SelectItem value="bundle">Bundle</SelectItem>
@@ -44,14 +46,14 @@ export function ProductFilters({ filters, onFiltersChange, onClearFilters }: Pro
         <div className="flex items-center space-x-2">
           <label className="text-sm font-medium text-gray-700">Status:</label>
           <Select
-            value={filters.lifecycleStatus}
+            value={filters.lifecycleStatus || "all"}
             onValueChange={(value) => handleFilterChange("lifecycleStatus", value)}
           >
             <SelectTrigger className="w-32">
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Status</SelectItem>
+              <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="draft">Draft</SelectItem>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="retired">Retired</SelectItem>
@@ -62,14 +64,14 @@ export function ProductFilters({ filters, onFiltersChange, onClearFilters }: Pro
         <div className="flex items-center space-x-2">
           <label className="text-sm font-medium text-gray-700">Format:</label>
           <Select
-            value={filters.format}
+            value={filters.format || "all"}
             onValueChange={(value) => handleFilterChange("format", value)}
           >
             <SelectTrigger className="w-32">
               <SelectValue placeholder="All Formats" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Formats</SelectItem>
+              <SelectItem value="all">All Formats</SelectItem>
               <SelectItem value="digital">Digital</SelectItem>
               <SelectItem value="physical">Physical</SelectItem>
             </SelectContent>
