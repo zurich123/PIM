@@ -1,44 +1,51 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Plus, Edit, Trash2, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sidebar } from "@/components/layout/sidebar";
+import type { ProductWithOfferings } from "@shared/schema";
 
 export default function Categories() {
-  const [categories] = useState([
-    {
-      id: 1,
-      name: "Professional Development",
-      description: "Courses and materials for career advancement",
-      productCount: 15,
-      color: "blue"
-    },
-    {
-      id: 2,
-      name: "Technical Skills",
-      description: "Programming and technology courses",
-      productCount: 23,
-      color: "green"
-    },
-    {
-      id: 3,
-      name: "Business & Finance",
-      description: "Business strategy and financial literacy",
-      productCount: 8,
-      color: "purple"
-    },
-    {
-      id: 4,
-      name: "Health & Wellness",
-      description: "Health education and wellness programs",
-      productCount: 12,
-      color: "red"
-    }
-  ]);
-
   const [searchQuery, setSearchQuery] = useState("");
+  
+  const { data: products = [] } = useQuery<ProductWithOfferings[]>({
+    queryKey: ["/api/products"],
+  });
+
+  // Generate categories from actual product data
+  const categories = useMemo(() => {
+    const categoryMap = new Map();
+    
+    products.forEach(product => {
+      if (!categoryMap.has(product.productType)) {
+        categoryMap.set(product.productType, {
+          id: product.productType,
+          name: product.productType.charAt(0).toUpperCase() + product.productType.slice(1),
+          description: `${product.productType.charAt(0).toUpperCase() + product.productType.slice(1)} products and offerings`,
+          productCount: 0,
+          color: getColorForType(product.productType)
+        });
+      }
+      
+      const category = categoryMap.get(product.productType);
+      category.productCount++;
+    });
+    
+    return Array.from(categoryMap.values());
+  }, [products]);
+
+  function getColorForType(type: string): string {
+    const colors = {
+      course: "blue",
+      book: "green", 
+      bundle: "purple",
+      membership: "red"
+    };
+    return colors[type as keyof typeof colors] || "gray";
+  }
 
   const filteredCategories = categories.filter(category =>
     category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -130,6 +137,7 @@ export default function Categories() {
                       <Button
                         variant="ghost"
                         size="sm"
+                        onClick={() => window.location.href = `/products?productType=${category.id}`}
                         className="text-primary-500 hover:text-primary-600 hover:bg-primary-50"
                       >
                         View Products

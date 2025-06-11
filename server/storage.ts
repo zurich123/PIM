@@ -66,19 +66,32 @@ export class DatabaseStorage implements IStorage {
   }): Promise<ProductWithOfferings[]> {
     const productList = await db.select().from(products);
     
+    let filteredProducts = productList;
+
+    // Apply filters
+    if (filters) {
+      if (filters.productType) {
+        filteredProducts = filteredProducts.filter(p => p.productType === filters.productType);
+      }
+      if (filters.lifecycleStatus) {
+        filteredProducts = filteredProducts.filter(p => p.lifecycleStatus === filters.lifecycleStatus);
+      }
+      if (filters.format) {
+        filteredProducts = filteredProducts.filter(p => p.format === filters.format);
+      }
+      if (filters.search) {
+        const search = filters.search.toLowerCase();
+        filteredProducts = filteredProducts.filter(p => 
+          p.productName.toLowerCase().includes(search) ||
+          p.productId.toLowerCase().includes(search)
+        );
+      }
+    }
+    
     const productsWithOfferings: ProductWithOfferings[] = [];
-    for (const product of productList) {
+    for (const product of filteredProducts) {
       const offerings = await this.getProductOfferings(product.id);
       productsWithOfferings.push({ ...product, offerings });
-    }
-
-    // Apply search filter in memory for now
-    if (filters?.search) {
-      const search = filters.search.toLowerCase();
-      return productsWithOfferings.filter(p => 
-        p.productName.toLowerCase().includes(search) ||
-        p.productId.toLowerCase().includes(search)
-      );
     }
 
     return productsWithOfferings;
@@ -122,7 +135,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(productOfferings).where(eq(productOfferings.productId, id));
     
     const result = await db.delete(products).where(eq(products.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   async getProductOfferings(productId: number): Promise<ProductOffering[]> {
@@ -148,7 +161,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProductOffering(id: number): Promise<boolean> {
     const result = await db.delete(productOfferings).where(eq(productOfferings.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 }
 
