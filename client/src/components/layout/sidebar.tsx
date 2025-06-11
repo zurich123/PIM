@@ -1,6 +1,16 @@
 import { Box, BarChart3, Tags, Settings } from "lucide-react";
+import { Link, useLocation } from "wouter";
 
 export function Sidebar() {
+  const [location] = useLocation();
+
+  const isActive = (path: string) => {
+    if (path === "/products" && (location === "/" || location === "/products")) {
+      return true;
+    }
+    return location === path;
+  };
+
   return (
     <div className="hidden md:flex md:flex-shrink-0">
       <div className="flex flex-col w-72 bg-white border-r border-gray-200">
@@ -19,20 +29,28 @@ export function Sidebar() {
 
         {/* Navigation Menu */}
         <nav className="flex-1 px-4 py-6 space-y-2">
-          <a 
-            href="#" 
-            className="flex items-center px-4 py-3 text-sm font-medium text-white bg-primary-500 rounded-lg"
+          <Link 
+            to="/products"
+            className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg ${
+              isActive("/products")
+                ? "text-white bg-primary-500"
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
           >
             <Box className="mr-3 h-5 w-5" />
             Products
-          </a>
-          <a 
-            href="#" 
-            className="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg"
+          </Link>
+          <Link 
+            to="/categories"
+            className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg ${
+              isActive("/categories")
+                ? "text-white bg-primary-500"
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
           >
             <Tags className="mr-3 h-5 w-5" />
             Categories
-          </a>
+          </Link>
           <a 
             href="#" 
             className="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg"
