@@ -83,12 +83,12 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post('/api/auth/logout', (req, res) => {
+  app.get('/api/auth/logout', (req, res) => {
     req.logout((err) => {
       if (err) {
         return res.status(500).json({ message: 'Logout failed' });
       }
-      res.json({ message: 'Logged out successfully' });
+      res.redirect('/');
     });
   });
 }

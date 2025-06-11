@@ -1,14 +1,21 @@
-import { Box, BarChart3, Tags, Settings } from "lucide-react";
+import { Box, BarChart3, Tags, Settings, LogOut } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
 export function Sidebar() {
   const [location] = useLocation();
+  const { user } = useAuth();
 
   const isActive = (path: string) => {
     if (path === "/products" && (location === "/" || location === "/products")) {
       return true;
     }
     return location === path;
+  };
+
+  const handleLogout = () => {
+    window.location.href = '/api/auth/logout';
   };
 
   return (
@@ -69,16 +76,26 @@ export function Sidebar() {
 
         {/* User Profile */}
         <div className="px-4 py-4 border-t border-gray-200">
-          <div className="flex items-center">
-            <img 
-              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&h=200" 
-              alt="User profile" 
-              className="w-10 h-10 rounded-full object-cover"
-            />
-            <div className="ml-3">
-              <span className="text-sm font-medium text-gray-900">John Smith</span>
-              <p className="text-xs text-gray-500">Product Manager</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <img 
+                src={user?.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&h=200"} 
+                alt="User profile" 
+                className="w-10 h-10 rounded-full object-cover"
+              />
+              <div className="ml-3">
+                <span className="text-sm font-medium text-gray-900">{user?.name || 'User'}</span>
+                <p className="text-xs text-gray-500">{user?.email || ''}</p>
+              </div>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="p-2 h-auto"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
