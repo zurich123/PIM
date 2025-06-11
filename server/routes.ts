@@ -2,9 +2,22 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertProductSchema, insertProductOfferingSchema } from "@shared/schema";
+import { setupAuth, requireAuth } from "./auth";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication
+  setupAuth(app);
+
+  // Authentication routes
+  app.get('/api/auth/user', requireAuth, async (req, res) => {
+    try {
+      res.json(req.user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
   
   // Get all products with optional filtering
   app.get("/api/products", async (req, res) => {
