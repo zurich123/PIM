@@ -37,6 +37,9 @@ export interface IStorage {
   createProductOffering(offering: InsertProductOffering): Promise<ProductOffering>;
   updateProductOffering(id: number, offering: Partial<InsertProductOffering>): Promise<ProductOffering | undefined>;
   deleteProductOffering(id: number): Promise<boolean>;
+  
+  // Analytics methods
+  getAnalytics(): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
