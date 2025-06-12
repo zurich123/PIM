@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Products from "@/pages/products";
 import Categories from "@/pages/categories";
+import Analytics from "@/pages/analytics";
 import Login from "@/pages/login";
 
 function Router() {
@@ -32,6 +33,7 @@ function Router() {
       <Route path="/" component={Products} />
       <Route path="/products" component={Products} />
       <Route path="/categories" component={Categories} />
+      <Route path="/analytics" component={Analytics} />
       <Route component={NotFound} />
     </Switch>
   );

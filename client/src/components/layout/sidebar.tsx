@@ -58,13 +58,17 @@ export function Sidebar() {
             <Tags className="mr-3 h-5 w-5" />
             Categories
           </Link>
-          <a 
-            href="#" 
-            className="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg"
+          <Link 
+            to="/analytics"
+            className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg ${
+              isActive("/analytics")
+                ? "text-white bg-primary-500"
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
           >
             <BarChart3 className="mr-3 h-5 w-5" />
             Analytics
-          </a>
+          </Link>
           <a 
             href="#" 
             className="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg"

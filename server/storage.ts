@@ -11,7 +11,7 @@ import {
   type ProductWithOfferings
 } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, count, isNotNull, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -165,6 +165,105 @@ export class DatabaseStorage implements IStorage {
   async deleteProductOffering(id: number): Promise<boolean> {
     const result = await db.delete(productOfferings).where(eq(productOfferings.id, id));
     return (result.rowCount || 0) > 0;
+  }
+
+  async getAnalytics(): Promise<any> {
+    try {
+      // Get total counts from both tables
+      const [totalProductsResult] = await db.select({ count: count() }).from(products);
+      const [totalOfferingsResult] = await db.select({ count: count() }).from(productOfferings);
+
+      // Products analytics - group by different attributes
+      const productsByType = await db
+        .select({
+          name: products.productType,
+          value: count()
+        })
+        .from(products)
+        .groupBy(products.productType)
+        .orderBy(count());
+
+      const productsByStatus = await db
+        .select({
+          name: products.lifecycleStatus,
+          value: count()
+        })
+        .from(products)
+        .groupBy(products.lifecycleStatus)
+        .orderBy(count());
+
+      const productsByFormat = await db
+        .select({
+          name: products.format,
+          value: count()
+        })
+        .from(products)
+        .groupBy(products.format)
+        .orderBy(count());
+
+      // Product offerings analytics - group by brand
+      const offeringsByBrand = await db
+        .select({
+          name: productOfferings.brand,
+          value: count()
+        })
+        .from(productOfferings)
+        .where(isNotNull(productOfferings.brand))
+        .groupBy(productOfferings.brand)
+        .orderBy(count());
+
+      // Price analysis from offerings table
+      const allPrices = await db
+        .select({
+          price: productOfferings.price
+        })
+        .from(productOfferings)
+        .where(isNotNull(productOfferings.price));
+
+      const prices = allPrices.map(p => parseFloat(p.price || '0')).filter(p => p > 0);
+      const priceDistribution = this.calculatePriceDistribution(prices);
+
+      return {
+        totalProducts: totalProductsResult.count,
+        totalOfferings: totalOfferingsResult.count,
+        productsByType: productsByType.map(item => ({
+          name: item.name || 'Unknown',
+          value: item.value
+        })),
+        productsByStatus: productsByStatus.map(item => ({
+          name: item.name || 'Unknown',
+          value: item.value
+        })),
+        productsByFormat: productsByFormat.map(item => ({
+          name: item.name || 'Unknown',
+          value: item.value
+        })),
+        offeringsByBrand: offeringsByBrand.map(item => ({
+          name: item.name || 'Unknown',
+          value: item.value
+        })),
+        priceDistribution,
+        recentActivity: []
+      };
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      throw error;
+    }
+  }
+
+  private calculatePriceDistribution(prices: number[]) {
+    const ranges = [
+      { range: '$0-$50', min: 0, max: 50 },
+      { range: '$51-$100', min: 51, max: 100 },
+      { range: '$101-$250', min: 101, max: 250 },
+      { range: '$251-$500', min: 251, max: 500 },
+      { range: '$501+', min: 501, max: Infinity }
+    ];
+
+    return ranges.map(range => ({
+      range: range.range,
+      count: prices.filter(price => price >= range.min && price <= range.max).length
+    }));
   }
 }
 
