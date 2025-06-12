@@ -76,6 +76,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const product = await storage.createProduct(validatedData);
+      
+      // Send email notification asynchronously (don't block the response)
+      sendNewProductNotification(product).then((result) => {
+        if (result.success) {
+          console.log(`Email notification sent for product: ${product.productName}`);
+          if (result.previewUrl) {
+            console.log(`Email preview available at: ${result.previewUrl}`);
+          }
+        } else {
+          console.error(`Failed to send email for product: ${product.productName}`, result.error);
+        }
+      }).catch((error) => {
+        console.error("Email notification error:", error);
+      });
+      
       res.status(201).json(product);
     } catch (error) {
       if (error instanceof z.ZodError) {

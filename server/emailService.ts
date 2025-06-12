@@ -1,11 +1,8 @@
 import nodemailer from 'nodemailer';
 import type { Product } from '@shared/schema';
 
-// Create a transporter using a free SMTP service (Ethereal Email for testing)
-// In production, you could use Gmail SMTP or other free services
+// Create a transporter using Ethereal Email (free testing service)
 const createTransporter = async () => {
-  // For development/testing, we'll use Ethereal Email (temporary email service)
-  // This creates a test account that doesn't require registration
   const testAccount = await nodemailer.createTestAccount();
   
   return nodemailer.createTransport({
@@ -57,7 +54,10 @@ export async function sendNewProductNotification(product: Product) {
                   </span>
                 </td>
               </tr>
-
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold; color: #555;">Membership Flag:</td>
+                <td style="padding: 8px 0;">${product.membershipFlag ? 'Yes' : 'No'}</td>
+              </tr>
             </table>
           </div>
           
@@ -82,6 +82,7 @@ export async function sendNewProductNotification(product: Product) {
         Product Type: ${product.productType}
         Format: ${product.format}
         Lifecycle Status: ${product.lifecycleStatus}
+        Membership Flag: ${product.membershipFlag ? 'Yes' : 'No'}
         
         Added on: ${new Date().toLocaleString()}
         
@@ -102,52 +103,6 @@ export async function sendNewProductNotification(product: Product) {
     
   } catch (error) {
     console.error('Failed to send email notification:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    };
-  }
-}
-
-// Alternative function for production use with Gmail SMTP (requires app password)
-export async function sendEmailViaGmail(product: Product, gmailUser?: string, gmailPass?: string) {
-  if (!gmailUser || !gmailPass) {
-    console.log('Gmail credentials not provided, skipping email notification');
-    return { success: false, error: 'Gmail credentials not configured' };
-  }
-
-  try {
-    const transporter = nodemailer.createTransporter({
-      service: 'gmail',
-      auth: {
-        user: gmailUser,
-        pass: gmailPass, // This should be an app password, not regular password
-      },
-    });
-
-    const mailOptions = {
-      from: gmailUser,
-      to: 'vmandava18@gmail.com',
-      subject: `New Product Added: ${product.productName}`,
-      html: `
-        <h2>New Product Added to Catalog</h2>
-        <h3>${product.productName}</h3>
-        <p><strong>SKU:</strong> ${product.sku}</p>
-        <p><strong>Type:</strong> ${product.productType}</p>
-        <p><strong>Format:</strong> ${product.format}</p>
-        <p><strong>Status:</strong> ${product.lifecycleStatus}</p>
-        ${product.description ? `<p><strong>Description:</strong> ${product.description}</p>` : ''}
-        <p><em>Added on: ${new Date().toLocaleString()}</em></p>
-      `
-    };
-
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Gmail notification sent successfully:', info.messageId);
-    
-    return { success: true, messageId: info.messageId };
-    
-  } catch (error) {
-    console.error('Failed to send Gmail notification:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error'
