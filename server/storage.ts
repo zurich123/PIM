@@ -2,13 +2,16 @@ import {
   users, 
   products, 
   productOfferings,
+  categories,
   type User, 
   type InsertUser,
   type Product,
   type InsertProduct,
   type ProductOffering,
   type InsertProductOffering,
-  type ProductWithOfferings
+  type ProductWithOfferings,
+  type Category,
+  type InsertCategory
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, count, isNotNull, sql } from "drizzle-orm";
@@ -37,6 +40,13 @@ export interface IStorage {
   createProductOffering(offering: InsertProductOffering): Promise<ProductOffering>;
   updateProductOffering(id: number, offering: Partial<InsertProductOffering>): Promise<ProductOffering | undefined>;
   deleteProductOffering(id: number): Promise<boolean>;
+  
+  // Category methods
+  getCategories(): Promise<Category[]>;
+  getCategory(id: number): Promise<Category | undefined>;
+  createCategory(category: InsertCategory): Promise<Category>;
+  updateCategory(id: number, category: Partial<InsertCategory>): Promise<Category | undefined>;
+  deleteCategory(id: number): Promise<boolean>;
   
   // Analytics methods
   getAnalytics(): Promise<any>;
@@ -247,6 +257,62 @@ export class DatabaseStorage implements IStorage {
       };
     } catch (error) {
       console.error("Error fetching analytics:", error);
+      throw error;
+    }
+  }
+
+  async getCategories(): Promise<Category[]> {
+    try {
+      return await db.select().from(categories);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      throw error;
+    }
+  }
+
+  async getCategory(id: number): Promise<Category | undefined> {
+    try {
+      const [category] = await db.select().from(categories).where(eq(categories.id, id));
+      return category || undefined;
+    } catch (error) {
+      console.error('Error fetching category:', error);
+      throw error;
+    }
+  }
+
+  async createCategory(insertCategory: InsertCategory): Promise<Category> {
+    try {
+      const [category] = await db
+        .insert(categories)
+        .values(insertCategory)
+        .returning();
+      return category;
+    } catch (error) {
+      console.error('Error creating category:', error);
+      throw error;
+    }
+  }
+
+  async updateCategory(id: number, updateData: Partial<InsertCategory>): Promise<Category | undefined> {
+    try {
+      const [category] = await db
+        .update(categories)
+        .set(updateData)
+        .where(eq(categories.id, id))
+        .returning();
+      return category || undefined;
+    } catch (error) {
+      console.error('Error updating category:', error);
+      throw error;
+    }
+  }
+
+  async deleteCategory(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(categories).where(eq(categories.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error('Error deleting category:', error);
       throw error;
     }
   }
