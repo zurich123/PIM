@@ -4,11 +4,15 @@ import { storage } from "./storage";
 import { insertProductSchema, insertProductOfferingSchema, insertCategorySchema } from "@shared/schema";
 import { setupAuth, requireAuth } from "./auth";
 import { sendNewProductNotification } from "./emailService";
+import { setupSwagger } from "./swagger";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   setupAuth(app);
+
+  // Setup Swagger UI for interactive API documentation
+  setupSwagger(app);
 
   // API Key middleware for external clients
   const apiKeyAuth = (req: any, res: any, next: any) => {
@@ -30,8 +34,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // External API Documentation endpoint
+  // Redirect root docs to Swagger UI
   app.get("/api/docs", (req, res) => {
+    res.redirect("/api/docs/swagger");
+  });
+
+  // Legacy JSON API Documentation endpoint
+  app.get("/api/docs/json", (req, res) => {
     res.json({
       title: "ProductFlow API Documentation",
       version: "1.0.0",
