@@ -249,7 +249,7 @@ Create a new product category.
 **Request Body:**
 ```json
 {
-  "categoryName": "string (required)",
+  "name": "string (required)",
   "description": "string (optional)"
 }
 ```
@@ -260,7 +260,7 @@ curl -X POST \
   -H "Content-Type: application/json" \
   -H "x-api-key: YOUR_API_KEY" \
   -d '{
-    "categoryName": "Data Science",
+    "name": "Data Science",
     "description": "Courses and materials related to data science and analytics"
   }' \
   https://your-domain.com/api/external/categories
@@ -377,8 +377,9 @@ All API endpoints return consistent error responses:
 ```typescript
 {
   id: number;
-  categoryName: string;
+  name: string;
   description?: string;
+  color?: string;
 }
 ```
 
@@ -512,7 +513,7 @@ curl -X POST \
   -H "Content-Type: application/json" \
   -H "x-api-key: $API_KEY" \
   -d '{
-    "categoryName": "Web Development",
+    "name": "Web Development",
     "description": "Modern web development courses and resources"
   }' \
   "$BASE_URL/categories"
