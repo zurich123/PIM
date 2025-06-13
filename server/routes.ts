@@ -34,9 +34,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Redirect root docs to Swagger UI
+  // API Documentation Portal
   app.get("/api/docs", (req, res) => {
-    res.redirect("/api/docs/swagger");
+    res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProductFlow API Documentation</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background-color: #f8f9fa; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .header { text-align: center; margin-bottom: 3rem; padding: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; font-weight: 700; }
+        .header p { font-size: 1.2rem; opacity: 0.9; }
+        .version { background: rgba(255,255,255,0.2); padding: 0.25rem 0.75rem; border-radius: 20px; display: inline-block; margin-top: 1rem; font-size: 0.9rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; margin-bottom: 3rem; }
+        .card { background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border: 1px solid #e9ecef; transition: all 0.3s ease; }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .card-icon { width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1rem; }
+        .interactive-icon { background: linear-gradient(135deg, #4CAF50, #45a049); color: white; }
+        .docs-icon { background: linear-gradient(135deg, #2196F3, #1976D2); color: white; }
+        .card h3 { font-size: 1.5rem; margin-bottom: 1rem; color: #2c3e50; }
+        .card p { color: #666; margin-bottom: 1.5rem; }
+        .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: #667eea; color: white; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.3s ease; }
+        .btn:hover { background: #5a6fd8; transform: translateY(-1px); }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #5a6268; }
+        .auth-section { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; }
+        .auth-section h3 { color: #856404; margin-bottom: 1rem; }
+        .auth-section p { color: #856404; margin-bottom: 1rem; }
+        .auth-code { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 0.75rem; font-family: 'Monaco', 'Menlo', monospace; font-size: 0.9rem; color: #495057; }
+        .features { background: white; border-radius: 12px; padding: 2rem; margin-bottom: 3rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .features h2 { margin-bottom: 1.5rem; color: #2c3e50; }
+        .feature-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; }
+        .feature-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-radius: 8px; background: #f8f9fa; }
+        .feature-check { background: #28a745; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+        @media (max-width: 768px) { .container { padding: 1rem; } .header h1 { font-size: 2rem; } .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ProductFlow API Documentation</h1>
+            <p>Comprehensive API for managing products and categories</p>
+            <div class="version">Version 1.0.0</div>
+        </div>
+        
+        <div class="auth-section">
+            <h3>🔐 Authentication Required</h3>
+            <p>All API endpoints require authentication using an API key. Include your API key in the request header:</p>
+            <div class="auth-code">x-api-key: YOUR_API_KEY</div>
+        </div>
+        
+        <div class="grid">
+            <div class="card">
+                <div class="card-icon interactive-icon">🚀</div>
+                <h3>Interactive API Explorer</h3>
+                <p>Test all API endpoints directly in your browser with Swagger UI. No coding required - just enter your API key and start exploring!</p>
+                <a href="/api/docs/swagger/" class="btn">Launch Swagger UI</a>
+            </div>
+            
+            <div class="card">
+                <div class="card-icon docs-icon">📖</div>
+                <h3>JSON API Reference</h3>
+                <p>Machine-readable API specification in JSON format for automated tools and integration.</p>
+                <a href="/api/docs/json" class="btn btn-secondary">View JSON API</a>
+            </div>
+        </div>
+        
+        <div class="features">
+            <h2>API Features</h2>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <div class="feature-check">✓</div>
+                    <span>Complete CRUD operations for Products</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-check">✓</div>
+                    <span>Complete CRUD operations for Categories</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-check">✓</div>
+                    <span>Advanced filtering and search</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-check">✓</div>
+                    <span>RESTful API design</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-check">✓</div>
+                    <span>Comprehensive error handling</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-check">✓</div>
+                    <span>API key authentication</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+    `);
   });
 
   // Legacy JSON API Documentation endpoint
